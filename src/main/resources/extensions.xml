@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<extensions>
+	<point id="de.featjar.base.cli.Commands">
+		<extension id="de.featjar.analysis.sat4j.cli.CardinalitySamplingCommand" />
+		<extension id="de.featjar.analysis.sat4j.cli.ClusterInteractionSamplingCommand" />
+		<extension id="de.featjar.analysis.sat4j.cli.PrioritizedSamplingCommand" />
+		<extension id="de.featjar.analysis.sat4j.cli.WeightedSamplingCommand" />
+	</point>
+</extensions>
