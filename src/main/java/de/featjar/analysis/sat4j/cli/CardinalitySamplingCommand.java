@@ -79,41 +79,31 @@ public class CardinalitySamplingCommand extends ASamplingAdditionCommand {
                 .max(Integer::compareTo)
                 .orElse(0);
 
-        // determine the highest variable id to know which ones are free for artificial ones
         VariableMap oldVariableMap = featureModel.getVariableMap();
         VariableMap newVariableMap = oldVariableMap.clone();
-
-        int maxVariable = oldVariableMap.getMaximumIndex().orElse(0);
 
         int[] artificialVariables = new int[maxCardinality];
         for (int i = 0; i < maxCardinality; i++) {
             artificialVariables[i] = newVariableMap.add(UUID.randomUUID().toString());
         }
 
-        // gather all possible literals in the model
-        BooleanAssignment featureModelVariables = oldVariableMap.getVariables();
-        BooleanAssignment featureModelLiterals = featureModelVariables.addAll(featureModelVariables.inverse());
-
         List<ICombinationSpecification> combinationsList = new ArrayList<>();
 
-        // for each cluster add a LiteralSetsCombinationSpecification that covers the combination of three sets of
+        // for each cluster add a LiteralSetsCombinationSpecification that covers the combination of two sets of
         // literals:
-        // 1. (t - |Cluster|) >= 0 literals of FM \ Cluster (all literals not in cluster) where t is the general YASA T
-        // 2. |Cluster| literals of Cluster (all literals)
-        // 3. 1 literal of the first c artificial variables where c is the cardinality of the cluster
+        // 1. |Cluster| literals of Cluster (all literals)
+        // 2. 1 literal of the first c artificial variables where c is the cardinality of the cluster
         for (BooleanAssignment cluster : cardinalityMap.getAssignments()) {
             int cardinality = cardinalityMap.getValue(cluster);
             if (cardinality <= 0) {
                 continue;
             }
 
-            BooleanAssignment allWithoutCluster = featureModelLiterals.removeAllVariables(cluster);
             BooleanAssignment artificials =
                     new BooleanAssignment(Arrays.copyOfRange(artificialVariables, 0, cardinality));
-            int[] tValues = new int[] {Math.max(0, t - cluster.size()), cluster.size(), 1};
-            // Todo change
+            int[] tValues = new int[] {cluster.size(), 1};
             combinationsList.add(new LiteralSetsCombinationSpecification(
-                    tValues, new BooleanAssignmentList(oldVariableMap, allWithoutCluster, cluster, artificials)));
+                    tValues, new BooleanAssignmentList(oldVariableMap, cluster, artificials)));
         }
         // add the regular t-wise sampling on top
         // Todo: optimization possible by removing single feature entries of cardinality map
