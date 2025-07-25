@@ -42,6 +42,33 @@ import java.util.stream.StreamSupport;
 
 public class CardinalitySamplingCommand extends ASamplingAdditionCommand {
 
+    public static class CardinalityCombinationSpecificationsWrapper {
+        private final List<ICombinationSpecification> combinationsList;
+        private final VariableMap newVariableMap;
+        private final int[] artificialVariables;
+
+        public CardinalityCombinationSpecificationsWrapper(
+                List<ICombinationSpecification> combinationsList,
+                VariableMap newVariableMap,
+                int[] artificialVariables) {
+            this.combinationsList = combinationsList;
+            this.newVariableMap = newVariableMap;
+            this.artificialVariables = artificialVariables;
+        }
+
+        public List<ICombinationSpecification> getCombinationsList() {
+            return combinationsList;
+        }
+
+        public VariableMap getNewVariableMap() {
+            return newVariableMap;
+        }
+
+        public int[] getArtificialVariables() {
+            return artificialVariables;
+        }
+    }
+
     public static final Option<Path> CARDINALITY_MAP = Option.newOption("cardinality-map", Option.PathParser)
             .setRequired(false)
             .setDescription("How often a cluster must at least appear in the sample.")
@@ -69,9 +96,9 @@ public class CardinalitySamplingCommand extends ASamplingAdditionCommand {
                 featureModel, cardinalityMap, optionParser.get(T_OPTION), optionParser.get(ITERATIONS_OPTION));
     }
 
-    public IComputation<BooleanAssignmentList> createCardinalitySamplingComputation(
-            BooleanAssignmentList featureModel, BooleanAssignmentValueMap cardinalityMap, int t, int iterations) {
-        adaptFeatureModelToBooleanAssignmentValueMap(featureModel, cardinalityMap);
+    public static CardinalityCombinationSpecificationsWrapper createCardinalityCombinationSpecifications(
+            BooleanAssignmentList featureModel, BooleanAssignmentValueMap cardinalityMap) {
+        List<ICombinationSpecification> combinationsList = new ArrayList<>();
 
         // calculate the maximum cardinality to know how many artificial variables are necessary
         int maxCardinality = StreamSupport.stream(cardinalityMap.spliterator(), false)
@@ -86,8 +113,6 @@ public class CardinalitySamplingCommand extends ASamplingAdditionCommand {
         for (int i = 0; i < maxCardinality; i++) {
             artificialVariables[i] = newVariableMap.add(UUID.randomUUID().toString());
         }
-
-        List<ICombinationSpecification> combinationsList = new ArrayList<>();
 
         // for each cluster add a LiteralSetsCombinationSpecification that covers the combination of two sets of
         // literals:
@@ -105,6 +130,18 @@ public class CardinalitySamplingCommand extends ASamplingAdditionCommand {
             combinationsList.add(new LiteralSetsCombinationSpecification(
                     tValues, new BooleanAssignmentList(oldVariableMap, cluster, artificials)));
         }
+        return new CardinalityCombinationSpecificationsWrapper(combinationsList, newVariableMap, artificialVariables);
+    }
+
+    public IComputation<BooleanAssignmentList> createCardinalitySamplingComputation(
+            BooleanAssignmentList featureModel, BooleanAssignmentValueMap cardinalityMap, int t, int iterations) {
+        adaptFeatureModelToBooleanAssignmentValueMap(featureModel, cardinalityMap);
+        VariableMap oldVariableMap = featureModel.getVariableMap();
+        CardinalityCombinationSpecificationsWrapper combinationsWrapper =
+                createCardinalityCombinationSpecifications(featureModel, cardinalityMap);
+        List<ICombinationSpecification> combinationsList = combinationsWrapper.getCombinationsList();
+        VariableMap newVariableMap = combinationsWrapper.getNewVariableMap();
+        int[] artificialVariables = combinationsWrapper.getArtificialVariables();
         // add the regular t-wise sampling on top
         // Todo: optimization possible by removing single feature entries of cardinality map
         combinationsList.add(new VariableCombinationSpecification(t, oldVariableMap));

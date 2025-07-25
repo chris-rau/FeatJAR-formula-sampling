@@ -40,7 +40,7 @@ import java.util.Optional;
 
 public class WeightedSamplingCommand extends ASamplingAdditionCommand {
 
-    public static final Option<Path> WEIGHT_MAP = Option.newOption("priority-map", Option.PathParser)
+    public static final Option<Path> WEIGHT_MAP = Option.newOption("weight-map", Option.PathParser)
             .setRequired(false)
             .setDescription(
                     "Variables with assigned weight values. k-wise interactions are covered for variables with weight k.")
@@ -55,11 +55,23 @@ public class WeightedSamplingCommand extends ASamplingAdditionCommand {
         return createWeightedSamplingComputation(featureModel, weightMap, optionParser.get(ITERATIONS_OPTION));
     }
 
+    public static List<ICombinationSpecification> createPriorityCombinationSpecifications(
+            BooleanAssignmentList featureModel, BooleanAssignmentValueMap weightMap) {
+        List<ICombinationSpecification> combinationSets = new ArrayList<>();
+        for (BooleanAssignment weightAssignment : weightMap.getAssignments()) {
+            int[] variables = weightAssignment.getAbsoluteValues(); // Todo: Use literals??
+            int weight = weightMap.getValue(weightAssignment);
+            combinationSets.add(new VariableCombinationSpecification(weight, variables, featureModel.getVariableMap()));
+        }
+        return combinationSets;
+    }
+
     public IComputation<BooleanAssignmentList> createWeightedSamplingComputation(
             BooleanAssignmentList featureModel, BooleanAssignmentValueMap weightMap, int iterations) {
         adaptFeatureModelToBooleanAssignmentValueMap(featureModel, weightMap);
 
-        List<ICombinationSpecification> combinationSets = new ArrayList<>();
+        List<ICombinationSpecification> combinationSets =
+                createPriorityCombinationSpecifications(featureModel, weightMap);
         for (BooleanAssignment weightAssignment : weightMap.getAssignments()) {
             int[] variables = weightAssignment.getAbsoluteValues(); // Todo: Use literals??
             int weight = weightMap.getValue(weightAssignment);

@@ -28,15 +28,15 @@ import de.featjar.formula.assignment.BooleanAssignmentValueMap;
 public class ClusterInteractionSampling extends ASamplingAddition {
 
     private final int t;
-    private final BooleanAssignmentValueMap weightMap;
+    private final BooleanAssignmentValueMap clusterInteractionMap;
 
     public ClusterInteractionSampling(int t, BooleanAssignmentValueMap cardinalityMap) {
         this.t = t;
-        this.weightMap = cardinalityMap;
+        this.clusterInteractionMap = cardinalityMap;
     }
 
     @Override
     public Result<BooleanAssignmentList> computeSample(BooleanAssignmentList featureModel) {
-        return new CardinalitySamplingCommand().computeSample(featureModel, weightMap, t, iterations);
+        return new CardinalitySamplingCommand().computeSample(featureModel, clusterInteractionMap, t, iterations);
     }
 }

@@ -63,11 +63,16 @@ public class PrioritizedSamplingCommand extends ASamplingAdditionCommand {
                 featureModel, priorityMap, optionParser.get(T_OPTION), optionParser.get(ITERATIONS_OPTION));
     }
 
+    public static BooleanAssignmentListCombinationSpecification createPriorityCombinationSpecification(
+            BooleanAssignmentValueMap priorityMap) {
+        return new BooleanAssignmentListCombinationSpecification(priorityMap.getBooleanAssignmentList());
+    }
+
     public IComputation<BooleanAssignmentList> createPrioritizedSamplingComputation(
             BooleanAssignmentList featureModel, BooleanAssignmentValueMap priorityMap, int t, int iterations) {
         adaptFeatureModelToBooleanAssignmentValueMap(featureModel, priorityMap);
         ICombinationSpecification combinationSpecification = new MultiCombinationSpecification(List.of(
-                new BooleanAssignmentListCombinationSpecification(priorityMap.getBooleanAssignmentList()),
+                createPriorityCombinationSpecification(priorityMap),
                 new VariableCombinationSpecification(t, featureModel.getVariableMap())));
 
         return Computations.of(featureModel)

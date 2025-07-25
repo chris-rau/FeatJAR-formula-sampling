@@ -41,7 +41,8 @@ import java.util.Optional;
 
 public class ClusterInteractionSamplingCommand extends ASamplingAdditionCommand {
 
-    public static final Option<Path> WEIGHT_MAP = Option.newOption("weight-map", Option.PathParser)
+    public static final Option<Path> CLUSTER_INTERACTION_MAP = Option.newOption(
+                    "cluster-interaction-map", Option.PathParser)
             .setRequired(false)
             .setDescription("Size of interactions to be covered in combination with a given cluster.")
             .setDefaultValue(null);
@@ -55,32 +56,43 @@ public class ClusterInteractionSamplingCommand extends ASamplingAdditionCommand 
 
     @Override
     protected IComputation<BooleanAssignmentList> newComputation(OptionList optionParser) {
-        BooleanAssignmentValueMap cardinalityMap =
-                loadBooleanAssignmentValueMap(optionParser, WEIGHT_MAP).orElseLog(Log.Verbosity.WARNING);
+        BooleanAssignmentValueMap clusterInteractionMap = loadBooleanAssignmentValueMap(
+                        optionParser, CLUSTER_INTERACTION_MAP)
+                .orElseLog(Log.Verbosity.WARNING);
 
         BooleanAssignmentList featureModel = parseFeatureModel(optionParser).orElseLog(Log.Verbosity.ERROR);
         return createClusterInteractionSamplingComputation(
-                featureModel, cardinalityMap, optionParser.get(T_OPTION), optionParser.get(ITERATIONS_OPTION));
+                featureModel, clusterInteractionMap, optionParser.get(T_OPTION), optionParser.get(ITERATIONS_OPTION));
     }
 
-    public IComputation<BooleanAssignmentList> createClusterInteractionSamplingComputation(
-            BooleanAssignmentList featureModel, BooleanAssignmentValueMap weightMap, int t, int iterations) {
-        adaptFeatureModelToBooleanAssignmentValueMap(featureModel, weightMap);
-
+    public static List<ICombinationSpecification> createClusterInteractionCombinationSpecifications(
+            BooleanAssignmentList featureModel, BooleanAssignmentValueMap clusterInteractionMap) {
         // gather all possible literals in the model
         BooleanAssignment featureModelVariables = featureModel.getVariableMap().getVariables();
         BooleanAssignment featureModelLiterals = featureModelVariables.addAll(featureModelVariables.inverse());
 
         List<ICombinationSpecification> combinationsList = new ArrayList<>();
 
-        for (BooleanAssignment cluster : weightMap.getAssignments()) {
-            int weight = weightMap.getValue(cluster);
+        for (BooleanAssignment cluster : clusterInteractionMap.getAssignments()) {
+            int weight = clusterInteractionMap.getValue(cluster);
             int[] tValues = new int[] {weight - 1, cluster.size()};
             BooleanAssignment allWithoutCluster = featureModelLiterals.removeAllVariables(cluster);
             combinationsList.add(new LiteralSetsCombinationSpecification(
                     tValues, new BooleanAssignmentList(featureModel.getVariableMap(), allWithoutCluster, cluster)));
         }
 
+        return combinationsList;
+    }
+
+    public IComputation<BooleanAssignmentList> createClusterInteractionSamplingComputation(
+            BooleanAssignmentList featureModel,
+            BooleanAssignmentValueMap clusterInteractionMap,
+            int t,
+            int iterations) {
+        adaptFeatureModelToBooleanAssignmentValueMap(featureModel, clusterInteractionMap);
+
+        List<ICombinationSpecification> combinationsList =
+                createClusterInteractionCombinationSpecifications(featureModel, clusterInteractionMap);
         // add the regular t-wise sampling on top
         // Todo: optimization possible ?
         combinationsList.add(new VariableCombinationSpecification(t, featureModel.getVariableMap()));
@@ -92,8 +104,11 @@ public class ClusterInteractionSamplingCommand extends ASamplingAdditionCommand 
     }
 
     public Result<BooleanAssignmentList> computeSample(
-            BooleanAssignmentList featureModel, BooleanAssignmentValueMap weightMap, int t, int iterations) {
-        return createClusterInteractionSamplingComputation(featureModel, weightMap, t, iterations)
+            BooleanAssignmentList featureModel,
+            BooleanAssignmentValueMap clusterInteractionMap,
+            int t,
+            int iterations) {
+        return createClusterInteractionSamplingComputation(featureModel, clusterInteractionMap, t, iterations)
                 .computeResult();
     }
 
