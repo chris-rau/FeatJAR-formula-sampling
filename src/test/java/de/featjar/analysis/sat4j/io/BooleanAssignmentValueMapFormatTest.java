@@ -20,26 +20,39 @@
  */
 package de.featjar.analysis.sat4j.io;
 
-import de.featjar.base.data.Result;
+import de.featjar.base.data.RangeMap;
 import de.featjar.base.io.input.AInputMapper;
 import de.featjar.base.io.input.StringInputMapper;
+import de.featjar.formula.VariableMap;
 import de.featjar.formula.assignment.BooleanAssignmentValueMap;
 import de.featjar.formula.io.textual.BooleanAssignmentValueMapFormat;
 import java.nio.charset.Charset;
-import org.junit.Test;
+import java.util.List;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 public class BooleanAssignmentValueMapFormatTest {
+
     @Test
     public void testBooleanAssignmentValueMapFormat() {
         String testString = "feature1,-feature2,feature3,+feature4=1\n"
                 + "--feature1,++feature2,-feature3,feature4=2\n"
                 + "feature5=4";
         AInputMapper inputMapper = new StringInputMapper(testString, Charset.defaultCharset(), ".txt");
-        Result<BooleanAssignmentValueMap> valueMapResult = new BooleanAssignmentValueMapFormat().parse(inputMapper);
-        valueMapResult.get();
-    }
+        BooleanAssignmentValueMap valueMap =
+                new BooleanAssignmentValueMapFormat().parse(inputMapper).get();
+        System.out.println(valueMap);
 
-    public static void main(String[] args) {
-        new BooleanAssignmentValueMapFormatTest().testBooleanAssignmentValueMapFormat();
+        Assertions.assertEquals(3, valueMap.size());
+        VariableMap variableMap = valueMap.getVariableMap();
+        Assertions.assertEquals(7, variableMap.size());
+        Assertions.assertTrue(variableMap.containsAllObjects(new RangeMap<>(
+                List.of("feature1", "feature2", "feature3", "feature4", "feature5", "-feature1", "+feature2"))));
+        String serialized =
+                new BooleanAssignmentValueMapFormat().serialize(valueMap).get();
+        System.out.println(serialized);
+        Assertions.assertTrue(serialized.contains("+feature1,-feature2,+feature3,+feature4=1"));
+        Assertions.assertTrue(serialized.contains("--feature1,++feature2,-feature3,+feature4=2"));
+        Assertions.assertTrue(serialized.contains("+feature5=4"));
     }
 }
