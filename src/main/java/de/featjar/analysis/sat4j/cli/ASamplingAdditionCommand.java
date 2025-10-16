@@ -43,7 +43,6 @@ public abstract class ASamplingAdditionCommand extends AAnalysisCommand<BooleanA
      * Path to the relevant feature model.
      */
     public static final Option<Path> FEATURE_MODEL = Option.newOption("feature-model", Option.PathParser)
-            .setRequired(true)
             .setDescription("Feature model to sample.")
             .setDefaultValue(null);
 

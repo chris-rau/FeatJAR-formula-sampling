@@ -43,23 +43,19 @@ import java.util.List;
 public class CombinedSamplingCommand extends ASamplingAdditionCommand {
 
     public static final Option<Path> PRIORITY_MAP = Option.newOption("priority-map", Option.PathParser)
-            .setRequired(false)
             .setDescription("Clusters with assigned priority values.")
             .setDefaultValue(null);
 
     public static final Option<Path> CARDINALITY_MAP = Option.newOption("cardinality-map", Option.PathParser)
-            .setRequired(false)
             .setDescription("How often a cluster must at least appear in the sample.")
             .setDefaultValue(null);
 
     public static final Option<Path> CLUSTER_INTERACTION_MAP = Option.newOption(
                     "cluster-interaction-map", Option.PathParser)
-            .setRequired(false)
             .setDescription("Size of interactions to be covered in combination with a given cluster.")
             .setDefaultValue(null);
 
     public static final Option<Path> WEIGHT_MAP = Option.newOption("weight-map", Option.PathParser)
-            .setRequired(false)
             .setDescription(
                     "Variables with assigned weight values. k-wise interactions are covered for variables with weight k.")
             .setDefaultValue(null);

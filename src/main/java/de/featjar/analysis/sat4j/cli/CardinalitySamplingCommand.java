@@ -70,7 +70,6 @@ public class CardinalitySamplingCommand extends ASamplingAdditionCommand {
     }
 
     public static final Option<Path> CARDINALITY_MAP = Option.newOption("cardinality-map", Option.PathParser)
-            .setRequired(false)
             .setDescription("How often a cluster must at least appear in the sample.")
             .setDefaultValue(null);
 

@@ -41,7 +41,6 @@ import java.util.Optional;
 public class PrioritizedSamplingCommand extends ASamplingAdditionCommand {
 
     public static final Option<Path> PRIORITY_MAP = Option.newOption("priority-map", Option.PathParser)
-            .setRequired(false)
             .setDescription("Clusters with assigned priority values.")
             .setDefaultValue(null);
 

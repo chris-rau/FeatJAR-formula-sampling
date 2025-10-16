@@ -41,7 +41,6 @@ import java.util.Optional;
 public class WeightedSamplingCommand extends ASamplingAdditionCommand {
 
     public static final Option<Path> WEIGHT_MAP = Option.newOption("weight-map", Option.PathParser)
-            .setRequired(false)
             .setDescription(
                     "Variables with assigned weight values. k-wise interactions are covered for variables with weight k.")
             .setDefaultValue(null);

@@ -43,7 +43,6 @@ public class ClusterInteractionSamplingCommand extends ASamplingAdditionCommand 
 
     public static final Option<Path> CLUSTER_INTERACTION_MAP = Option.newOption(
                     "cluster-interaction-map", Option.PathParser)
-            .setRequired(false)
             .setDescription("Size of interactions to be covered in combination with a given cluster.")
             .setDefaultValue(null);
 
