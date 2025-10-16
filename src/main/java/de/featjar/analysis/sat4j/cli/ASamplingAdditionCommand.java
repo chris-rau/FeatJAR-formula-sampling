@@ -76,6 +76,6 @@ public abstract class ASamplingAdditionCommand extends AAnalysisCommand<BooleanA
             FeatJAR.log()
                     .error(() -> "VariableMap of BooleanAssignmentValueMap is not subset of feature model VariableMap");
         }
-        featureModel.adapt(booleanAssignmentValueMap.getVariableMap());
+        booleanAssignmentValueMap.adapt(featureModel.getVariableMap());
     }
 }
